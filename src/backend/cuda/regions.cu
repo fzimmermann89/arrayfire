@@ -31,7 +31,8 @@ Array<T>  regions(const Array<char> &in, af_connectivity connectivity)
     cudaTextureObject_t tex = 0;
 
     //Use texture objects with compute 3.0 or higher
-    if (!std::is_same<T,double>::value) {
+    if (!std::is_same<T,double>::value &&
+            getDeviceProp(getActiveDeviceId()).major>=3) {
         cudaResourceDesc resDesc;
         memset(&resDesc, 0, sizeof(resDesc));
         resDesc.resType = cudaResourceTypeLinear;
@@ -61,10 +62,12 @@ Array<T>  regions(const Array<char> &in, af_connectivity connectivity)
             break;
     }
 
-    //Iterative procedure(while loop) in kernel::regions
-    //does stream synchronization towards loop end. So, it is
-    //safe to destroy the texture object
-    CUDA_CHECK(cudaDestroyTextureObject(tex));
+    if (getDeviceProp(getActiveDeviceId()).major>=3) {
+        //Iterative procedure(while loop) in kernel::regions
+        //does stream synchronization towards loop end. So, it is
+        //safe to destroy the texture object
+        CUDA_CHECK(cudaDestroyTextureObject(tex));
+    }
 
     return out;
 }
