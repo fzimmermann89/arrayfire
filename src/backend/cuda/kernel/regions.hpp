@@ -36,7 +36,11 @@ template<typename T>
 static inline __device__
 T fetch(const int n, cuda::Param<T> equiv_map, cudaTextureObject_t tex)
 {
+#if (__CUDA_ARCH__ >= 300)
     return tex1Dfetch<T>(tex, n);
+#else
+    return equiv_map.ptr[n];
+#endif
 }
 
 template<> __device__
